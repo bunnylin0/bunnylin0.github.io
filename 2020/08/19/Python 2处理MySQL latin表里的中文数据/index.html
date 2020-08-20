@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" type="image/png" href="/img/favicon.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <meta name="keywords" content="">
+  <title>Python 2处理MySQL latin表里的中文数据 - BunnyLin的博客</title>
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/github-markdown-css/4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    <link  rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/10.0.0/styles/monokai-sublime.min.css" />
+  
+
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_yg9cfy8wd6.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_pjno9b9zyxs.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script  src="/js/utils.js" ></script>
+<meta name="generator" content="Hexo 5.0.2"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>BunnyLin的博客</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="view intro-2" id="background" parallax=true
+         style="background: url('https://cdn.jsdelivr.net/gh/bunnylin0/picstore1/wallhaven-d582rg.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="container text-center white-text fadeInUp">
+            <span class="h2" id="subtitle">
+              
+            </span>
+
+            
+              
+  <div class="mt-3 post-meta">
+    <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+    <time datetime="2020-08-19 00:22">
+      2020年8月19日 凌晨
+    </time>
+  </div>
+
+
+<div class="mt-1">
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      2.7k 字
+    </span>
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      35
+       分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-md">
+      <div class="container nopadding-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <div class="post-content mx-auto" id="post">
+            
+            <article class="markdown-body">
+              <h2 id="1-前言"><a href="#1-前言" class="headerlink" title="1. 前言"></a>1. 前言</h2><blockquote>
+<p><a target="_blank" rel="noopener" href="http://cenalulu.github.io/mysql/mysql-mojibake/">被MySQL Server接收到以后实际上已经发生了编码不一致的情况。但是由于Latin1字符集对于自己表述范围外的字符不会做任何处理，而是保留原值。这样的行为也使得错进错出成为了可能。</a></p>
+</blockquote>
+<p>​    我们先提个小问题：在MySQL下，latin编码的表可以存储中文数据吗？</p>
+<p>​    答案是可以的。</p>
+<p>​    MySQL下，latin表会对自己表述范围外的字符不会做任何处理，<strong>所以latin表中存储其他编码的数据是可以实现的</strong>。</p>
+<p>​    我个人还是非常不建议读者们这样实现的。在latin表可以存储中文数据，就是一件非常Dirty的工作，是一个大坑，我就是被这样坑过来的，在各种<code>encode</code>、<code>decode</code>中迷失了自我。为了帮助其他人免受我之前的折磨，我才决定写下本篇文章。</p>
+<p>​    那么在latin表里存储中文数据会有什么问题呢？ </p>
+<ul>
+<li>程序软件处理中文数据时，需要中文数据进行各种编码解码；</li>
+<li>因为latin表的兼容性，同一张latin表里，<strong>可能同时存在了多种编码的数据</strong>，开发人员在写处理的程序软件需要考虑到这一部分兼容性；</li>
+<li>用户使用show create table命令的时候，无法确认表中的中文数据的实际编码，而且终端的编码与数据编码不一致，在查询中文数据的时候会出现乱码，需要用户不断的测试来找到正确的编码</li>
+</ul>
+<h2 id="2-处理建议"><a href="#2-处理建议" class="headerlink" title="2. 处理建议"></a>2. 处理建议</h2><p>​    常见的在latin表中存储中文的数据一般为GBK编码和UTF-8编码，如果你不可避免的需要处理latin表里的中文数据，那么我这里可以提供两种处理方式（Python 2的方式）。</p>
+<h3 id="2-1-转换成对应编码的str"><a href="#2-1-转换成对应编码的str" class="headerlink" title="2.1 转换成对应编码的str"></a>2.1 转换成对应编码的str</h3><ul>
+<li><p>处理要点：</p>
+<ul>
+<li>在处理latin表的Python脚本开头指定了中文数据的对应编码（<code># -*- coding: utf-8 -*-</code>或者<code># -*- coding: gbk -*-</code>）;</li>
+<li>Python脚本在与DB建立连接时，需要指定连接的<code>charset</code>为<code>latin1</code>;</li>
+<li>往DB写入中文数据时，<strong>脚本里的中文数据字符串此时的编码即为脚本开头指定的编码</strong>；</li>
+<li>读取中文数据时，从DB获取了中文数据后，需要将中文数据**由<code>unicode</code>类型以<code>latin</code>编码的方式<code>encode</code>**，还原成对应编码的<code>str</code> (这个时候可以根据自己的需要进行<code>print</code>、或者写入到文件里等等各种操作，读者可自由发挥)</li>
+</ul>
+</li>
+<li><p>缺点：</p>
+<ul>
+<li>用户需要事先明确latin表里的中文数据编码；</li>
+<li>latin表中需要处理的中文字段的编码需要是一致；</li>
+</ul>
+<p>处理的Python脚本示例如下：</p>
+</li>
+</ul>
+<div class="hljs"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/python</span>
+<span class="hljs-comment"># -*- coding: utf-8 -*-     #在Python文件的开头指定编码，值为GBK或者utf-8</span>
+<span class="hljs-keyword">import</span> MySQLdb
+
+<span class="hljs-comment"># 作者为了方便，对原有的MySQLdb数据库类的一些db操作进行的一个简单的封装成DataBase这个类，大家也可以直接使用MySQLdb</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DataBase</span>(<span class="hljs-params">object</span>):</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span>(<span class="hljs-params">self, host=<span class="hljs-string">&quot;127.0.0.1&quot;</span>, user=<span class="hljs-string">&quot;root&quot;</span>, passwd=<span class="hljs-string">&quot;123456&quot;</span>, db=<span class="hljs-string">&quot;test&quot;</span>, charset=<span class="hljs-string">&quot;latin1&quot;</span></span>):</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> passwd:
+            self.db = MySQLdb.connect(host=host, user=user,
+                                      db=db, charset=charset)
+        <span class="hljs-keyword">else</span>:
+            self.db = MySQLdb.connect(host=host, user=user, passwd=passwd,
+                                      db=db, charset=charset)
+        self.cursor = self.db.cursor()
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">execute</span>(<span class="hljs-params">self, sql</span>):</span>
+        <span class="hljs-keyword">try</span>:
+            self.cursor.execute(sql)
+            self.db.commit()
+            results = self.cursor.fetchall()
+            <span class="hljs-keyword">return</span> results
+        <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+            print(str(e))
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">executemany</span>(<span class="hljs-params">self, sql, param_list</span>):</span>
+        <span class="hljs-keyword">try</span>:
+            self.cursor.executemany(sql, param_list)
+            self.db.commit()
+        <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+            print(str(e))
+
+db = DataBase()
+<span class="hljs-comment"># 1. 写入数据</span>
+student_name = <span class="hljs-string">&#x27;小刚&#x27;</span>    <span class="hljs-comment"># 该中文数据此时为utf-8的字符串</span>
+sql = <span class="hljs-string">&quot;insert into test1 values (1, &#x27;%s&#x27;, &#x27;male&#x27;)&quot;</span> %(student_name)
+db.execute(sql)
+<span class="hljs-comment"># 2. 获取数据</span>
+sql = <span class="hljs-string">&quot;select name from test1&quot;</span>
+results = db.execute(sql)
+<span class="hljs-keyword">for</span> result <span class="hljs-keyword">in</span> results:
+    print(type(result[<span class="hljs-number">0</span>]))
+    print([result[<span class="hljs-number">0</span>]]) <span class="hljs-comment"># 查看这里打印出来的数据，你就会发现这里的不是正常的unicode数据，如果你直接print的话，在显示的时候编码转换就会发生异常</span>
+    print(result[<span class="hljs-number">0</span>].encode(<span class="hljs-string">&#x27;latin1&#x27;</span>)) <span class="hljs-comment"># 此时中文数据为utf-8编码，与脚本编码一致，可以正常打印</span></code></pre></div>
+
+<h3 id="2-2-转换成unicode"><a href="#2-2-转换成unicode" class="headerlink" title="2.2 转换成unicode"></a>2.2 转换成unicode</h3><ul>
+<li><p>处理要点：</p>
+<ul>
+<li>在处理latin表的Python脚本开头指定了中文数据的对应编码（<code># -*- coding: utf-8 -*-</code>或者<code># -*- coding: gbk -*-</code>，根据你的习惯来设置）;</li>
+<li>与DB建立连接时，需要指定连接的<code>charset</code>为<code>latin1</code>;</li>
+<li>写入中文数据时，脚本中涉及到的中文数据我们均让它成为<code>unicode</code>类型，如<code>u&#39;小红&#39;</code></li>
+<li>读取中文数据时，从DB获取了中文数据后，将中文数据由<code>unicode</code>以<code>latin</code>编码的方式<code>encode</code>，还原成对应编码的<code>str</code> ，最后再<code>decode</code>成<code>unicode</code>类型（我喜欢转换成<code>unicode</code>类型，python脚本在使用print函数打印<code>unicode</code>类型的内容，<code>unicode</code>会自动转换成合适的编码）</li>
+</ul>
+<p>处理的Python脚本示例如下：</p>
+</li>
+</ul>
+<div class="hljs"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/python</span>
+<span class="hljs-comment"># -*- coding: utf-8 -*-     #在Python文件的开头指定编码，值为GBK或者utf-8</span>
+<span class="hljs-keyword">import</span> MySQLdb
+
+<span class="hljs-comment"># 作者为了方便，对原有的MySQLdb数据库类的一些db操作进行的一个简单的封装成DataBase这个类，大家也可以直接使用MySQLdb</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DataBase</span>(<span class="hljs-params">object</span>):</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span>(<span class="hljs-params">self, host=<span class="hljs-string">&quot;127.0.0.1&quot;</span>, user=<span class="hljs-string">&quot;root&quot;</span>, passwd=<span class="hljs-string">&quot;123456&quot;</span>, db=<span class="hljs-string">&quot;test&quot;</span>, charset=<span class="hljs-string">&quot;latin1&quot;</span></span>):</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> passwd:
+            self.db = MySQLdb.connect(host=host, user=user,
+                                      db=db, charset=charset)
+        <span class="hljs-keyword">else</span>:
+            self.db = MySQLdb.connect(host=host, user=user, passwd=passwd,
+                                      db=db, charset=charset)
+        self.cursor = self.db.cursor()
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">execute</span>(<span class="hljs-params">self, sql</span>):</span>
+        <span class="hljs-keyword">try</span>:
+            self.cursor.execute(sql)
+            self.db.commit()
+            results = self.cursor.fetchall()
+            <span class="hljs-keyword">return</span> results
+        <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+            print(str(e))
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">executemany</span>(<span class="hljs-params">self, sql, param_list</span>):</span>
+        <span class="hljs-keyword">try</span>:
+            self.cursor.executemany(sql, param_list)
+            self.db.commit()
+        <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+            print(str(e))
+
+db = DataBase()
+<span class="hljs-comment"># 1. 写入数据</span>
+student_name = <span class="hljs-string">u&#x27;小红&#x27;</span>    <span class="hljs-comment"># 该中文数据此时为unicode类型</span>
+sql = <span class="hljs-string">&quot;insert into test1 values (2, &#x27;%s&#x27;, &#x27;female&#x27;)&quot;</span> %(student_name.encode(<span class="hljs-string">&#x27;gbk&#x27;</span>)) <span class="hljs-comment"># 我们将unicode数据根据自己需要，转换成对应编码，比如这里我转换成gbk编码</span>
+db.execute(sql)
+<span class="hljs-comment"># 2. 获取数据</span>
+sql = <span class="hljs-string">&quot;select name from test1&quot;</span>
+results = db.execute(sql)
+<span class="hljs-keyword">for</span> result <span class="hljs-keyword">in</span> results:
+    print(type(result[<span class="hljs-number">0</span>]))
+    print([result[<span class="hljs-number">0</span>]]) <span class="hljs-comment"># 查看这里打印出来的数据，你就会发现这里的不是正常的unicode数据，如果你直接print的话，在显示的时候编码转换就会发生异常</span>
+    print(result[<span class="hljs-number">0</span>].encode(<span class="hljs-string">&#x27;latin1&#x27;</span>).decode(<span class="hljs-string">&#x27;gbk&#x27;</span>)) <span class="hljs-comment"># 此时中文数据为unicode，转换成unicode则不会因为中文数据编码和脚本编码不一致而导致打印出现异常</span></code></pre></div>
+
+<h2 id="3-测试小实验"><a href="#3-测试小实验" class="headerlink" title="3. 测试小实验"></a>3. 测试小实验</h2><p>​    实践可以让我们加深如何使用Python 2处理MySQL latin表里的中文数据。如果你手上的latin表是线上环境，我相信你也是不敢随意测试。下面就让我们手把手的把测试环境给搭建起来，好好地实践一番。</p>
+<h3 id="3-1-运行MySQL"><a href="#3-1-运行MySQL" class="headerlink" title="3.1 运行MySQL"></a>3.1 运行MySQL</h3><p>​    在你的Linux虚拟机上，我们通过docker快速拉起一个MySQL实例：</p>
+<div class="hljs"><pre><code class="hljs angelscript">$ docker run -itd --name mysql-test -p <span class="hljs-number">3306</span>:<span class="hljs-number">3306</span> -e MYSQL_ROOT_PASSWORD=<span class="hljs-number">123456</span> mysql:<span class="hljs-number">5.7</span></code></pre></div>
+<p>​    这里我简单解释一下这条命令的意思：我们以<code>mysql:5.7</code>这个镜像为模板，新启动一个命名为<code>mysql-test</code>的容器，容器的<code>3306</code>端口与母机的<code>3306</code>端口关联，同时我们设置了<code>mysql-test</code>容器里的root账号密码为123456</p>
+<blockquote>
+<p>注：docker的安装和一些常用的docker命令这里就不展开篇幅了，网络上还是有不少不错的资源的，努力搜索一下。</p>
+</blockquote>
+<h3 id="3-2-建立测试用的DB和表"><a href="#3-2-建立测试用的DB和表" class="headerlink" title="3.2 建立测试用的DB和表"></a>3.2 建立测试用的DB和表</h3><div class="hljs"><pre><code class="hljs SQL"><span class="hljs-comment"># 通过命令行的方式连接至MySQL上</span>
+$ mysql -h 127.0.0.1 -u root -p&#x27;123456&#x27; <span class="hljs-comment">--default-character-set=latin1</span>
+
+<span class="hljs-comment"># 在MySQL的命令行终端下，执行以下三条SQL</span>
+<span class="hljs-comment"># 创建数据库</span>
+<span class="hljs-keyword">create</span> <span class="hljs-keyword">database</span> <span class="hljs-keyword">test</span>;
+<span class="hljs-keyword">use</span> <span class="hljs-keyword">test</span>;
+<span class="hljs-comment"># 创建测试用的test1表，表中包含了三个字段，我们后续将会在name字段中插入中文数据</span>
+<span class="hljs-keyword">create</span> <span class="hljs-keyword">table</span> test1 (
+    <span class="hljs-keyword">id</span> <span class="hljs-built_in">INT</span> PRIMARY <span class="hljs-keyword">KEY</span> AUTO_INCREMENT,
+    <span class="hljs-keyword">name</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">1024</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    sex <span class="hljs-built_in">varchar</span>(<span class="hljs-number">1024</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>
+) <span class="hljs-keyword">ENGINE</span>=<span class="hljs-keyword">InnoDB</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-keyword">CHARSET</span>=latin1</code></pre></div>
+
+<p>​        操作过程如下所示：</p>
+<div class="hljs"><pre><code class="hljs SQL">$ mysql -h 127.0.0.1 -u root -p&#x27;123456&#x27; <span class="hljs-comment">--default-character-set=latin1    #连接至我们新启动的DB上</span>
+Welcome to the MariaDB monitor.  Commands <span class="hljs-keyword">end</span> <span class="hljs-keyword">with</span> ; or \g.
+Your MySQL connection id is 37
+Server version: 5.7.26 MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type &#x27;<span class="hljs-keyword">help</span>;&#x27; or &#x27;\h&#x27; for help. Type &#x27;\c&#x27; to clear the current input statement.
+
+MySQL [(none)]&gt; create database test;     # 建立测试用的test库；
+
+MySQL [(none)]&gt; use test;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup <span class="hljs-keyword">with</span> -A
+
+<span class="hljs-keyword">Database</span> <span class="hljs-keyword">changed</span>
+MySQL [<span class="hljs-keyword">test</span>]&gt; <span class="hljs-keyword">create</span> <span class="hljs-keyword">table</span> test1 (
+    <span class="hljs-keyword">id</span> <span class="hljs-built_in">INT</span> PRIMARY <span class="hljs-keyword">KEY</span> AUTO_INCREMENT,
+    <span class="hljs-keyword">name</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">1024</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    sex <span class="hljs-built_in">varchar</span>(<span class="hljs-number">1024</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>
+) <span class="hljs-keyword">ENGINE</span>=<span class="hljs-keyword">InnoDB</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-keyword">CHARSET</span>=latin1;    <span class="hljs-comment"># 创建测试用的test1表</span></code></pre></div>
+
+<h3 id="3-3-往表中写入和读取中文数据"><a href="#3-3-往表中写入和读取中文数据" class="headerlink" title="3.3 往表中写入和读取中文数据"></a>3.3 往表中写入和读取中文数据</h3><p>​    下面我们将演示，如何往latin表中写入和读取utf-8编码的中文数据</p>
+<h4 id="3-3-1-创建测试脚本"><a href="#3-3-1-创建测试脚本" class="headerlink" title="3.3.1 创建测试脚本"></a>3.3.1 创建测试脚本</h4><p>​    在你的家目录下，我们来新建一个测试用的python脚本，文件名为test.py</p>
+<div class="hljs"><pre><code class="hljs vim">$ touch test.<span class="hljs-keyword">py</span>
+$ <span class="hljs-keyword">vim</span> test.<span class="hljs-keyword">py</span></code></pre></div>
+
+<p>​    我们将以下的文本内容，拷贝至test.py文件里：</p>
+<div class="hljs"><pre><code class="hljs python"><span class="hljs-comment">#!/usr/bin/python</span>
+<span class="hljs-comment"># -*- coding: gbk -*-     #在Python文件的开头指定编码，值为gbk或者utf-8</span>
+<span class="hljs-keyword">import</span> MySQLdb
+
+<span class="hljs-comment"># 作者为了方便，对原有的MySQLdb数据库类的一些db操作进行的一个简单的封装成DataBase这个类，大家也可以直接使用MySQLdb</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DataBase</span>(<span class="hljs-params">object</span>):</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span>(<span class="hljs-params">self, host=<span class="hljs-string">&quot;127.0.0.1&quot;</span>, user=<span class="hljs-string">&quot;root&quot;</span>, passwd=<span class="hljs-string">&quot;123456&quot;</span>, db=<span class="hljs-string">&quot;test&quot;</span>, charset=<span class="hljs-string">&quot;latin1&quot;</span></span>):</span>
+        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> passwd:
+            self.db = MySQLdb.connect(host=host, user=user,
+                                      db=db, charset=charset)
+        <span class="hljs-keyword">else</span>:
+            self.db = MySQLdb.connect(host=host, user=user, passwd=passwd,
+                                      db=db, charset=charset)
+        self.cursor = self.db.cursor()
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">execute</span>(<span class="hljs-params">self, sql</span>):</span>
+        <span class="hljs-keyword">try</span>:
+            self.cursor.execute(sql)
+            self.db.commit()
+            results = self.cursor.fetchall()
+            <span class="hljs-keyword">return</span> results
+        <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+            print(str(e))
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">executemany</span>(<span class="hljs-params">self, sql, param_list</span>):</span>
+        <span class="hljs-keyword">try</span>:
+            self.cursor.executemany(sql, param_list)
+            self.db.commit()
+        <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+            print(str(e))
+
+db = DataBase()
+<span class="hljs-comment"># 1. 写入数据</span>
+student_name = <span class="hljs-string">u&#x27;小强&#x27;</span>    <span class="hljs-comment"># 该中文数据此时为unicode类型</span>
+sql = <span class="hljs-string">&quot;insert into test1 values (1, &#x27;%s&#x27;, &#x27;male&#x27;)&quot;</span> %(student_name.encode(<span class="hljs-string">&#x27;utf8&#x27;</span>)) <span class="hljs-comment"># 我们将unicode数据根据自己需要，转换成对应编码，比如这里我转换成utf8编码</span>
+db.execute(sql)
+<span class="hljs-comment"># 2. 获取数据</span>
+sql = <span class="hljs-string">&quot;select name from test1&quot;</span>
+results = db.execute(sql)
+<span class="hljs-keyword">for</span> result <span class="hljs-keyword">in</span> results:
+    print(type(result[<span class="hljs-number">0</span>]))
+    print(result[<span class="hljs-number">0</span>].encode(<span class="hljs-string">&#x27;latin1&#x27;</span>).decode(<span class="hljs-string">&#x27;utf8&#x27;</span>)) <span class="hljs-comment"># 此时中文数据为unicode，转换成unicode则不会因为中文数据编码和脚本编码不一致而导致打印出现异常</span></code></pre></div>
+
+<h4 id="3-3-2-执行脚本"><a href="#3-3-2-执行脚本" class="headerlink" title="3.3.2 执行脚本"></a>3.3.2 执行脚本</h4><div class="hljs"><pre><code class="hljs vim">$ <span class="hljs-keyword">python</span> test.<span class="hljs-keyword">py</span></code></pre></div>
+
+<p>​    脚本的执行结果如下：</p>
+<div class="hljs"><pre><code class="hljs ada">&lt;<span class="hljs-keyword">type</span> <span class="hljs-type">&#x27;unicode&#x27;&gt;</span>
+<span class="hljs-type">小强</span></code></pre></div>
+
+<h2 id="4-优化建议"><a href="#4-优化建议" class="headerlink" title="4. 优化建议"></a>4. 优化建议</h2><p>​        如果你需要在DB中存储中文数据，那我个人建议在建表的时候指定utf8编码，这样我们可以非常明确表中存储的中文数据就一定是utf8编码的。</p>
+<h2 id="5-参考"><a href="#5-参考" class="headerlink" title="5. 参考"></a>5. 参考</h2><ol>
+<li><a target="_blank" rel="noopener" href="http://cenalulu.github.io/mysql/mysql-mojibake/">10分钟学会理解和解决MySQL乱码问题</a>(非常优秀的一篇文章)</li>
+</ol>
+
+            </article>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Python/">Python</a>
+                    
+                      <a class="hover-with-bg" href="/tags/MySQL/">MySQL</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！</p>
+              
+              
+                <div class="post-prevnext row">
+                  <div class="post-prev col-6">
+                    
+                    
+                  </div>
+                  <div class="post-next col-6">
+                    
+                    
+                      <a href="/2020/08/13/hello-world/">
+                        <span class="hidden-mobile">Hello World</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </div>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <div class="comments" id="comments">
+                
+                
+  <div id="vcomments"></div>
+  <script type="text/javascript">
+    function loadValine() {
+      addScript('https://cdn.staticfile.org/valine/1.4.14/Valine.min.js', function () {
+        new Valine({
+          el: "#vcomments",
+          app_id: "bhJ5qQvumCJ14lG36F9ssW0L-MdYXbMMI",
+          app_key: "IavxcD1EknkhSTe7KBRnugX1",
+          placeholder: "说点什么",
+          path: window.location.pathname,
+          avatar: "retro",
+          meta: ["nick","mail","link"],
+          pageSize: "10",
+          lang: "zh-CN",
+          highlight: false,
+          recordIP: false,
+          serverURLs: "",
+        });
+      });
+    }
+    createObserver(loadValine, 'vcomments');
+  </script>
+  <noscript>Please enable JavaScript to view the <a target="_blank" href="https://valine.js.org" rel="nofollow noopener noopener">comments
+      powered by Valine.</a></noscript>
+
+
+              </div>
+            
+          </div>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div id="tocbot"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+  </main>
+
+  
+    <a id="scroll-top-button" href="#" role="button">
+      <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+    </a>
+  
+
+  
+    <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  
+
+  
+
+  
+
+  <footer class="mt-5">
+  <div class="text-center py-3">
+    <div>
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a>
+      <i class="iconfont icon-love"></i>
+      <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener">
+        <span>Fluid</span></a>
+    </div>
+    
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- LeanCloud 统计PV -->
+        <span id="leancloud-site-pv-container" style="display: none">
+            总访问量 
+            <span id="leancloud-site-pv"></span>
+             次
+          </span>
+      
+      
+        <!-- LeanCloud 统计UV -->
+        <span id="leancloud-site-uv-container" style="display: none">
+            总访客数 
+            <span id="leancloud-site-uv"></span>
+             人
+          </span>
+      
+
+    
+  </div>
+
+
+    
+
+    
+  </div>
+</footer>
+
+<!-- SCRIPTS -->
+<script  src="https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js" ></script>
+<script  src="https://cdn.staticfile.org/twitter-bootstrap/4.4.1/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/main.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  <script defer src="https://cdn.staticfile.org/clipboard.js/2.0.6/clipboard.min.js" ></script>
+  <script  src="/js/clipboard-use.js" ></script>
+
+
+
+  <script defer>
+  (function () {
+    // 查询存储的记录
+    function getRecord(Counter, target) {
+      return new Promise(function (resolve, reject) {
+        Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({target})))
+          .then(resp => resp.json())
+          .then(({results, code, error}) => {
+            if (code === 401) {
+              throw error;
+            }
+            if (results && results.length > 0) {
+              var record = results[0];
+              resolve(record);
+            } else {
+              Counter('post', '/classes/Counter', {target, time: 0})
+                .then(resp => resp.json())
+                .then((record, error) => {
+                  if (error) {
+                    throw error;
+                  }
+                  resolve(record);
+                }).catch(error => {
+                console.error('Failed to create', error);
+                reject(error);
+              });
+            }
+          }).catch((error) => {
+          console.error('LeanCloud Counter Error:', error);
+          reject(error);
+        });
+      })
+    }
+
+    // 发起自增请求
+    function increment(Counter, incrArr) {
+      return new Promise(function (resolve, reject) {
+        Counter('post', '/batch', {
+          "requests": incrArr
+        }).then((res) => {
+          res = res.json();
+          if (res.error) {
+            throw res.error;
+          }
+          resolve(res);
+        }).catch((error) => {
+          console.error('Failed to save visitor count', error);
+          reject(error);
+        });
+      });
+    }
+
+    // 构建自增请求体
+    function buildIncrement(objectId) {
+      return {
+        "method": "PUT",
+        "path": `/1.1/classes/Counter/${ objectId }`,
+        "body": {
+          "time": {
+            '__op': 'Increment',
+            'amount': 1
+          }
+        }
+      }
+    }
+
+    // 校验是否为有效的 UV
+    function validUV() {
+      var key = 'LeanCloud_UV_Flag';
+      var flag = localStorage.getItem(key);
+      if (flag) {
+        // 距离标记小于 24 小时则不计为 UV
+        if (new Date().getTime() - parseInt(flag) <= 86400000) {
+          return false;
+        }
+      }
+      localStorage.setItem(key, new Date().getTime().toString());
+      return true;
+    }
+
+    function addCount(Counter) {
+      var enableIncr = 'true' === 'true' && window.location.hostname !== 'localhost';
+      var getterArr = [];
+      var incrArr = [];
+
+      // 请求 PV 并自增
+      var pvCtn = document.querySelector('#leancloud-site-pv-container');
+      if (pvCtn || enableIncr) {
+        var pvGetter = getRecord(Counter, 'site-pv').then((record) => {
+          incrArr.push(buildIncrement(record.objectId))
+          var ele = document.querySelector('#leancloud-site-pv');
+          if (ele) {
+            ele.innerText = record.time + 1;
+            if (pvCtn) {
+              pvCtn.style.display = 'inline';
+            }
+          }
+        });
+        getterArr.push(pvGetter);
+      }
+
+      // 请求 UV 并自增
+      var uvCtn = document.querySelector('#leancloud-site-uv-container');
+      if (uvCtn || enableIncr) {
+        var uvGetter = getRecord(Counter, 'site-uv').then((record) => {
+          var vuv = validUV();
+          vuv && incrArr.push(buildIncrement(record.objectId))
+          var ele = document.querySelector('#leancloud-site-uv');
+          if (ele) {
+            ele.innerText = record.time + (vuv ? 1 : 0);
+            if (uvCtn) {
+              uvCtn.style.display = 'inline';
+            }
+          }
+        });
+        getterArr.push(uvGetter);
+      }
+
+      // 如果是文章，请求文章的浏览数，并自增
+      if ('true' === 'true') {
+        var viewCtn = document.querySelector('#leancloud-post-views-container');
+        if (viewCtn || enableIncr) {
+          var target = decodeURI('/2020/08/19/Python%202%E5%A4%84%E7%90%86MySQL%20latin%E8%A1%A8%E9%87%8C%E7%9A%84%E4%B8%AD%E6%96%87%E6%95%B0%E6%8D%AE/');
+          var viewGetter = getRecord(Counter, target).then((record) => {
+            incrArr.push(buildIncrement(record.objectId))
+            if (viewCtn) {
+              var ele = document.querySelector('#leancloud-post-views');
+              if (ele) {
+                ele.innerText = (record.time || 0) + 1;
+                viewCtn.style.display = 'inline';
+              }
+            }
+          });
+          getterArr.push(viewGetter);
+        }
+      }
+
+      // 如果启动计数自增，批量发起自增请求
+      if (enableIncr) {
+        Promise.all(getterArr).then(() => {
+          incrArr.length > 0 && increment(Counter, incrArr);
+        })
+      }
+    }
+
+    var app_id = 'bhJ5qQvumCJ14lG36F9ssW0L-MdYXbMMI'
+    var app_key = 'IavxcD1EknkhSTe7KBRnugX1'
+    var server_url = ''
+
+    function fetchData(api_server) {
+      var Counter = (method, url, data) => {
+        return fetch(`${ api_server }/1.1${ url }`, {
+          method,
+          headers: {
+            'X-LC-Id': app_id,
+            'X-LC-Key': app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+
+      addCount(Counter);
+    }
+
+    var api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${ app_id.slice(0, 8).toLowerCase() }.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(resp => resp.json())
+        .then(({api_server}) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+
+
+
+
+  <script  src="https://cdn.staticfile.org/tocbot/4.11.1/tocbot.min.js" ></script>
+  <script>
+    $(document).ready(function () {
+      var boardCtn = $('#board-ctn');
+      var boardTop = boardCtn.offset().top;
+
+      tocbot.init({
+        tocSelector: '#tocbot',
+        contentSelector: 'article.markdown-body',
+        headingSelector: 'h1,h2,h3,h4,h5,h6',
+        linkClass: 'tocbot-link',
+        activeLinkClass: 'tocbot-active-link',
+        listClass: 'tocbot-list',
+        isCollapsedClass: 'tocbot-is-collapsed',
+        collapsibleClass: 'tocbot-is-collapsible',
+        collapseDepth: 0,
+        scrollSmooth: true,
+        headingsOffset: -boardTop
+      });
+      if ($('.toc-list-item').length > 0) {
+        $('#toc').css('visibility', 'visible');
+      }
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/typed.js/2.0.11/typed.min.js" ></script>
+  <script>
+    var typed = new Typed('#subtitle', {
+      strings: [
+        '  ',
+        "Python 2处理MySQL latin表里的中文数据&nbsp;",
+      ],
+      cursorChar: "_",
+      typeSpeed: 70,
+      loop: false,
+    });
+    typed.stop();
+    $(document).ready(function () {
+      $(".typed-cursor").addClass("h2");
+      typed.start();
+    });
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/anchor-js/4.2.2/anchor.min.js" ></script>
+  <script>
+    anchors.options = {
+      placement: "right",
+      visible: "hover",
+      
+    };
+    var el = "h1,h2,h3,h4,h5,h6".split(",");
+    var res = [];
+    for (item of el) {
+      res.push(".markdown-body > " + item)
+    }
+    anchors.add(res.join(", "))
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    var path = "/local-search.xml";
+    var inputArea = document.querySelector("#local-search-input");
+    inputArea.onclick = function () {
+      searchFunc(path, 'local-search-input', 'local-search-result');
+      this.onclick = null
+    }
+  </script>
+
+
+
+  <script  src="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.staticfile.org/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <script>
+    $('#post img:not(.no-zoom img, img[no-zoom]), img[zoom]').each(
+      function () {
+        var element = document.createElement('a');
+        $(element).attr('data-fancybox', 'images');
+        $(element).attr('href', $(this).attr('src'));
+        $(this).wrap(element);
+      }
+    );
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+    <!-- Google Analytics -->
+    <script defer>
+      (function (i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r;
+        i[r] = i[r] || function () {
+          (i[r].q = i[r].q || []).push(arguments)
+        }, i[r].l = 1 * new Date();
+        a = s.createElement(o),
+          m = s.getElementsByTagName(o)[0];
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m)
+      })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
+
+      ga('create', 'UA-175257960-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+</body>
+</html>
